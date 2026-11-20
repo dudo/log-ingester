@@ -38,9 +38,6 @@ jobs:
       - if: matrix.suite == 'service'
         run: go test -race -tags integration ./...
       - if: matrix.suite == 'durability'
-        run: go test -race -tags durability -run '^TestAcknowledgedLogsSurviveInsertFailure
-      - if: always()
-        run: docker compose down --volumes
- -count=1 ./internal/clickhouse
+        run: go test -race -tags durability -run '^TestAcknowledgedLogsSurviveInsertFailure$' -count=1 ./internal/clickhouse
       - if: always()
         run: docker compose down --volumes

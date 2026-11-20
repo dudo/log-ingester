@@ -1,0 +1,14 @@
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:26.8.42.13
+    environment:
+      CLICKHOUSE_DB: logs
+      CLICKHOUSE_USER: log_ingester
+      CLICKHOUSE_PASSWORD: exercise-only
+    ports:
+      - "127.0.0.1:18123:8123"
+    healthcheck:
+      test: ["CMD", "clickhouse-client", "--user", "log_ingester", "--password", "exercise-only", "--query", "SELECT 1"]
+      interval: 2s
+      timeout: 3s
+      retries: 20

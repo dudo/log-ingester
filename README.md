@@ -24,7 +24,7 @@ curl -si --data-binary @testdata/demo.log http://127.0.0.1:8080/v1/logs
 curl -s 'http://127.0.0.1:8080/v1/logs?level=ERROR&service=dispatch&from=2026-03-04T09:12:00Z&to=2026-03-04T09:14:00Z'
 ```
 
-`POST /v1/logs` returns `202` after the synchronous insert succeeds. A store error returns `503`. A timed-out write can have an unknown outcome, so retries can create duplicates.
+`POST /v1/logs` returns `202` once the request enters the in-memory queue. A full queue returns `503`. A worker writes to ClickHouse when at least 256 records accumulate or its 200 ms timer fires. Search can lag while writes are pending.
 
 `GET /v1/logs` returns newest entries first. Filters combine with AND. `from` is inclusive and `to` is exclusive. `limit` defaults to 100 and accepts 1–500.
 

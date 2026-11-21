@@ -12,6 +12,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-chi/chi/v5"
+
 	"github.com/dudo/log-ingester/internal/clickhouse"
 	"github.com/dudo/log-ingester/internal/httpapi"
 	"github.com/dudo/log-ingester/internal/logs"
@@ -51,7 +53,9 @@ func TestAcknowledgedLogsSurviveInsertFailure(t *testing.T) {
 	request := httptest.NewRequest(http.MethodPost, "/v1/logs", strings.NewReader(
 		"2026-03-04T09:13:01.245234Z ERROR "+service+" Accepted before insert failure",
 	))
-	httpapi.New(batch, store).ServeHTTP(response, request)
+	router := chi.NewRouter()
+	httpapi.RegisterLogRoutes(router, batch, store)
+	router.ServeHTTP(response, request)
 	if response.Code != http.StatusAccepted {
 		t.Fatalf("fixture got HTTP %d, want 202", response.Code)
 	}

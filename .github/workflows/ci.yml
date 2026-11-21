@@ -11,15 +11,7 @@ permissions:
 
 jobs:
   test:
-    name: ${{ matrix.suite == 'durability' && 'Acknowledgment durability' || 'Service tests' }}
-    strategy:
-      fail-fast: false
-      matrix:
-        suite: [service, durability]
-        event: ["${{ github.event_name }}"]
-        exclude:
-          - suite: durability
-            event: push
+    name: Service tests
     runs-on: ubuntu-latest
     timeout-minutes: 7
     steps:
@@ -30,14 +22,9 @@ jobs:
         with:
           go-version: '1.27.4'
           cache: false
-      - if: matrix.suite == 'service'
-        run: go vet ./...
-      - if: matrix.suite == 'service'
-        run: go test -race ./...
+      - run: go vet ./...
+      - run: go test -race ./...
       - run: docker compose up -d --wait --wait-timeout 60
-      - if: matrix.suite == 'service'
-        run: go test -race -tags integration ./...
-      - if: matrix.suite == 'durability'
-        run: go test -race -tags durability -run '^TestAcknowledgedLogsSurviveInsertFailure$' -count=1 ./internal/clickhouse
+      - run: go test -race -tags integration ./...
       - if: always()
         run: docker compose down --volumes

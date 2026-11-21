@@ -53,7 +53,7 @@ func TestClickHouseIngestAndSearch(t *testing.T) {
 	if err := json.NewDecoder(response.Body).Decode(&entries); err != nil {
 		t.Fatal(err)
 	}
-	if len(entries) != 1 || entries[0].Message != "Lease  expired" ||
+	if len(entries) != 1 || entries[0].Level != logs.LevelError || entries[0].Message != "Lease  expired" ||
 		entries[0].Time.Format(time.RFC3339Nano) != from {
 		t.Fatalf("search entries = %+v", entries)
 	}

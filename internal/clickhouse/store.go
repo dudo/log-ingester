@@ -54,10 +54,10 @@ func (s *Store) Init(ctx context.Context) error {
 }
 
 type row struct {
-	Time    string `json:"event_time"`
-	Level   string `json:"level"`
-	Service string `json:"service"`
-	Message string `json:"message"`
+	Time    string     `json:"event_time"`
+	Level   logs.Level `json:"level"`
+	Service string     `json:"service"`
+	Message string     `json:"message"`
 }
 
 func (s *Store) Append(ctx context.Context, entries []logs.Entry) error {
@@ -76,7 +76,7 @@ func (s *Store) Search(ctx context.Context, filter logs.Filter) ([]logs.Entry, e
 	args := url.Values{"param_limit": {strconv.Itoa(filter.Limit)}}
 	if filter.Level != "" {
 		query += " AND level = {level:String}"
-		args.Set("param_level", filter.Level)
+		args.Set("param_level", string(filter.Level))
 	}
 	if filter.Service != "" {
 		query += " AND service = {service:String}"

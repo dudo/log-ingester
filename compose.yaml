@@ -8,7 +8,7 @@ services:
       target: tools
     entrypoint: ["go"]
     command: ["help"]
-    env_file: .env.compose
+    env_file: .env
     volumes:
       - .:/usr/src/app
       - gomod:/go/pkg/mod

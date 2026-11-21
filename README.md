@@ -10,9 +10,10 @@ Each line contains an RFC 3339 timestamp, a level, a service name, and the remai
 
 ## Run locally
 
-Docker Compose runs the Go service and ClickHouse. The app and Go service read their container settings from `.env.compose`.
+Docker Compose runs the Go service and ClickHouse. The app and Go service read their container settings from `.env`.
 
 ```sh
+cp .env.example .env
 docker compose up -d --build --wait
 ```
 

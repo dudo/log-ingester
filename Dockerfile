@@ -1,5 +1,7 @@
 FROM golang:1.27.4-bookworm AS tools
 
+ENV TINI_KILL_PROCESS_GROUP=1
+
 WORKDIR /usr/src/app
 COPY go.mod go.sum ./
 RUN go mod download

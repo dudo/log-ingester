@@ -1,3 +1,5 @@
+name: log-ingester
+
 services:
   app:
     build: .

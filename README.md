@@ -42,6 +42,6 @@ docker compose up -d --wait clickhouse
 docker compose run --rm go test -race -tags integration ./...
 ```
 
-Run `docker compose down` when finished. Add `--volumes` to remove the local database and tool caches.
+Run `docker compose down` when finished. Use `docker compose --profile tools down --volumes` to remove the local database and tool caches.
 
 Run `docker compose up -d --build --wait app` after editing the app. To run it on the host with Go 1.27, start ClickHouse with `docker compose up -d --wait clickhouse` and run `go run ./cmd/log-ingester`. Set `LISTEN_ADDR`, `CLICKHOUSE_URL`, `CLICKHOUSE_DB`, `CLICKHOUSE_USER`, or `CLICKHOUSE_PASSWORD` to override the host defaults.

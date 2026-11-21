@@ -65,11 +65,11 @@ func TestAcknowledgedLogsSurviveInsertFailure(t *testing.T) {
 		t.Fatalf("fault injection affected %d rows, want 1", failedRows)
 	}
 	if err := fault.Append(t.Context(), []logs.Entry{{
-		Time: time.Now().UTC(), Level: "INFO", Service: service, Message: "Control insert after recovery",
+		Time: time.Now().UTC(), Level: logs.LevelInfo, Service: service, Message: "Control insert after recovery",
 	}}); err != nil {
 		t.Fatalf("control insert: %v", err)
 	}
-	rows, err := store.Search(t.Context(), logs.Filter{Service: service, Level: "ERROR", Limit: 10})
+	rows, err := store.Search(t.Context(), logs.Filter{Service: service, Level: logs.LevelError, Limit: 10})
 	if err != nil {
 		t.Fatal(err)
 	}

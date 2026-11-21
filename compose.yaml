@@ -3,12 +3,7 @@ name: log-ingester
 services:
   app:
     build: .
-    environment: &app-env
-      LISTEN_ADDR: 0.0.0.0:8080
-      CLICKHOUSE_URL: http://clickhouse:8123/
-      CLICKHOUSE_DB: logs
-      CLICKHOUSE_USER: log_ingester
-      CLICKHOUSE_PASSWORD: exercise-only
+    env_file: .env.compose
     ports:
       - "127.0.0.1:8080:8080"
     depends_on:
@@ -26,7 +21,7 @@ services:
       target: tools
     entrypoint: ["go"]
     command: ["help"]
-    environment: *app-env
+    env_file: .env.compose
     volumes:
       - .:/usr/src/app
       - gomod:/go/pkg/mod

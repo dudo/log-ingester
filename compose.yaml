@@ -1,20 +1,7 @@
 name: log-ingester
 
 services:
-  app:
-    build: .
-    env_file: .env.compose
-    ports:
-      - "127.0.0.1:8080:8080"
-    depends_on:
-      clickhouse:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/v1/logs?limit=1"]
-      interval: 2s
-      timeout: 3s
-      retries: 20
-  go:
+  go: &go
     profiles: [tools]
     build:
       context: .
@@ -26,6 +13,22 @@ services:
       - .:/usr/src/app
       - gomod:/go/pkg/mod
       - gobuild:/root/.cache/go-build
+  app:
+    <<: *go
+    profiles: []
+    command: ["run", "./cmd/log-ingester"]
+    init: true
+    stop_signal: SIGINT
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/v1/logs?limit=1"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
   clickhouse:
     image: clickhouse/clickhouse-server:26.8.42.13
     environment:

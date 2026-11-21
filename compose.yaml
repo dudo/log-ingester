@@ -5,7 +5,7 @@ services:
     profiles: [tools]
     build:
       context: .
-      target: tools
+      target: base
     entrypoint: ["go"]
     command: ["help"]
     env_file: .env

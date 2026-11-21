@@ -1,4 +1,4 @@
-FROM golang:1.27.4-bookworm AS tools
+FROM golang:1.27.4-bookworm AS base
 
 ENV TINI_KILL_PROCESS_GROUP=1
 
@@ -6,7 +6,7 @@ WORKDIR /usr/src/app
 COPY go.mod go.sum ./
 RUN go mod download
 
-FROM tools AS build
+FROM base AS build
 COPY cmd ./cmd
 COPY internal ./internal
 RUN CGO_ENABLED=0 go build -o /out/log-ingester ./cmd/log-ingester

@@ -31,7 +31,7 @@ curl -s 'http://127.0.0.1:8080/v1/logs?level=ERROR&service=dispatch&from=2026-03
 ## Layers and checks
 
 - `internal/logs` parses lines and defines the storage interfaces.
-- `internal/httpapi` handles HTTP and validates request bounds and filters.
+- `internal/httpapi` registers chi routes and validates request bounds and filters.
 - `internal/clickhouse` owns the table, SQL parameters, and ClickHouse HTTP client.
 - `cmd/log-ingester` starts the service and handles shutdown.
 

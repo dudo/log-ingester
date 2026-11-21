@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/go-chi/chi/v5"
+
 	"github.com/dudo/log-ingester/internal/logs"
 )
 
@@ -17,8 +19,17 @@ const maxBodyBytes = 256 << 10
 const maxLineBytes = 8 << 10
 
 func New(writer logs.Writer, reader logs.Reader) http.Handler {
-	mux := http.NewServeMux()
-	mux.HandleFunc("POST /v1/logs", func(w http.ResponseWriter, r *http.Request) {
+	const logsPath = "/v1/logs"
+	router := chi.NewRouter()
+	searchLogs := search(reader)
+	router.Post(logsPath, ingest(writer))
+	router.Get(logsPath, searchLogs)
+	router.Head(logsPath, searchLogs)
+	return router
+}
+
+func ingest(writer logs.Writer) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := io.ReadAll(http.MaxBytesReader(w, r.Body, maxBodyBytes))
 		if err != nil {
 			var sizeErr *http.MaxBytesError
@@ -56,9 +67,11 @@ func New(writer logs.Writer, reader logs.Reader) http.Handler {
 			return
 		}
 		w.WriteHeader(http.StatusAccepted)
-	})
+	}
+}
 
-	mux.HandleFunc("GET /v1/logs", func(w http.ResponseWriter, r *http.Request) {
+func search(reader logs.Reader) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		filter, err := readFilter(r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -74,8 +87,7 @@ func New(writer logs.Writer, reader logs.Reader) http.Handler {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(entries)
-	})
-	return mux
+	}
 }
 
 func readFilter(r *http.Request) (logs.Filter, error) {

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"strings"
 	"testing"
 
@@ -80,5 +81,25 @@ func TestSearchRejectsInvalidFilters(t *testing.T) {
 		if response.Code != http.StatusBadRequest {
 			t.Errorf("%s: status = %d, want 400", query, response.Code)
 		}
+	}
+}
+
+func TestLogRouteMethods(t *testing.T) {
+	handler := New(nil, nil)
+	head := httptest.NewRecorder()
+	handler.ServeHTTP(head, httptest.NewRequest(http.MethodHead, "/v1/logs?limit=0", nil))
+	if head.Code != http.StatusBadRequest {
+		t.Fatalf("HEAD status = %d, want search handler to reject invalid limit with 400", head.Code)
+	}
+
+	put := httptest.NewRecorder()
+	handler.ServeHTTP(put, httptest.NewRequest(http.MethodPut, "/v1/logs", nil))
+	if put.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("PUT status = %d, want 405", put.Code)
+	}
+	allowed := strings.Fields(strings.ReplaceAll(strings.Join(put.Header().Values("Allow"), " "), ",", " "))
+	slices.Sort(allowed)
+	if !slices.Equal(allowed, []string{http.MethodGet, http.MethodHead, http.MethodPost}) {
+		t.Fatalf("Allow = %v, want GET, HEAD, POST", allowed)
 	}
 }

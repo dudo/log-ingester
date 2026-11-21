@@ -15,6 +15,7 @@ import (
 
 	"github.com/dudo/log-ingester/internal/clickhouse"
 	"github.com/dudo/log-ingester/internal/httpapi"
+	"github.com/dudo/log-ingester/internal/logs"
 )
 
 func main() {
@@ -43,8 +44,15 @@ func run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	batch := logs.NewBatcher(store, logs.BatchConfig{
+		QueueDepth: 64, FlushAt: 256, FlushEvery: 200 * time.Millisecond,
+	}, func(rows int, err error) {
+		slog.Error("ClickHouse flush failed", "rows", rows, "error", err)
+	})
+	defer batch.Close()
+
 	router := chi.NewRouter()
-	httpapi.RegisterLogRoutes(router, store, store)
+	httpapi.RegisterLogRoutes(router, batch, store)
 	server := &http.Server{
 		Handler:           router,
 		ReadHeaderTimeout: 5 * time.Second,

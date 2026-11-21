@@ -41,7 +41,7 @@ func TestIngestPreservesTimestampAndMessage(t *testing.T) {
 		t.Fatalf("status=%d, entries=%v", response.Code, got)
 	}
 	entry := got[0]
-	if entry.Time.Nanosecond() != 245234000 || entry.Level != "ERROR" ||
+	if entry.Time.Nanosecond() != 245234000 || entry.Level != logs.LevelError ||
 		entry.Service != "dispatch" || entry.Message != "Lease  expired before pickup: 00000000-0000-4000-8000-000000000001 [response_time=592ms]" {
 		t.Fatalf("parsed entry = %+v", entry)
 	}
@@ -53,6 +53,7 @@ func TestIngestRejectsMalformedOrOversizedRequestsBeforeWriting(t *testing.T) {
 		status     int
 	}{
 		{"malformed second line", validLine + "\nbad input", http.StatusBadRequest},
+		{"unknown level", strings.Replace(validLine, "**ERROR**", "unknown", 1), http.StatusBadRequest},
 		{"empty", " \n", http.StatusBadRequest},
 		{"oversized body", strings.Repeat("x", maxBodyBytes+1), http.StatusRequestEntityTooLarge},
 		{"oversized line", validLine + strings.Repeat("x", maxLineBytes), http.StatusBadRequest},

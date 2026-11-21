@@ -90,14 +90,14 @@ func search(reader logs.Reader) http.HandlerFunc {
 
 func readFilter(r *http.Request) (logs.Filter, error) {
 	query := r.URL.Query()
-	filter := logs.Filter{
-		Level: query.Get("level"), Service: strings.TrimSpace(query.Get("service")), Limit: 100,
-	}
-	if filter.Level != "" && !logs.ValidLevel(filter.Level) {
-		return filter, fmt.Errorf("invalid level")
-	}
-
+	filter := logs.Filter{Service: strings.TrimSpace(query.Get("service")), Limit: 100}
 	var err error
+	if level := query.Get("level"); level != "" {
+		filter.Level, err = logs.ParseLevel(level)
+		if err != nil {
+			return filter, err
+		}
+	}
 	if from := query.Get("from"); from != "" {
 		filter.From, err = logs.ParseTime(from)
 		if err != nil {

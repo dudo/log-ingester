@@ -8,17 +8,27 @@ import (
 	"unicode"
 )
 
+type Level string
+
+const (
+	LevelDebug   Level = "DEBUG"
+	LevelInfo    Level = "INFO"
+	LevelWarning Level = "WARNING"
+	LevelError   Level = "ERROR"
+)
+
 type Entry struct {
 	Time    time.Time `json:"timestamp"`
-	Level   string    `json:"level"`
+	Level   Level     `json:"level"`
 	Service string    `json:"service"`
 	Message string    `json:"message"`
 }
 
 type Filter struct {
-	Level, Service string
-	From, To       time.Time
-	Limit          int
+	Level    Level
+	Service  string
+	From, To time.Time
+	Limit    int
 }
 
 type Writer interface {
@@ -29,12 +39,13 @@ type Reader interface {
 	Search(context.Context, Filter) ([]Entry, error)
 }
 
-func ValidLevel(level string) bool {
+func ParseLevel(value string) (Level, error) {
+	level := Level(value)
 	switch level {
-	case "DEBUG", "INFO", "WARNING", "ERROR":
-		return true
+	case LevelDebug, LevelInfo, LevelWarning, LevelError:
+		return level, nil
 	default:
-		return false
+		return "", fmt.Errorf("invalid level")
 	}
 }
 
@@ -55,11 +66,12 @@ func ParseLine(line string) (Entry, error) {
 	if len(fields) != 4 {
 		return Entry{}, fmt.Errorf("expected a timestamp, level, service and message")
 	}
-	level := fields[1]
-	if len(level) > 4 && strings.HasPrefix(level, "**") && strings.HasSuffix(level, "**") {
-		level = level[2 : len(level)-2]
+	rawLevel := fields[1]
+	if len(rawLevel) > 4 && strings.HasPrefix(rawLevel, "**") && strings.HasSuffix(rawLevel, "**") {
+		rawLevel = rawLevel[2 : len(rawLevel)-2]
 	}
-	if !ValidLevel(level) ||
+	level, err := ParseLevel(rawLevel)
+	if err != nil ||
 		fields[2] == "" || strings.IndexFunc(fields[2], unicode.IsSpace) >= 0 ||
 		strings.TrimSpace(fields[3]) == "" {
 		return Entry{}, fmt.Errorf("expected a timestamp, level, service and message")

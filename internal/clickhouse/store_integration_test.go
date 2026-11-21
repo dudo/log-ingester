@@ -12,6 +12,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-chi/chi/v5"
+
 	"github.com/dudo/log-ingester/internal/clickhouse"
 	"github.com/dudo/log-ingester/internal/httpapi"
 	"github.com/dudo/log-ingester/internal/logs"
@@ -32,7 +34,8 @@ func TestClickHouseIngestAndSearch(t *testing.T) {
 	payload := fmt.Sprintf("%s ERROR %s Lease  expired\n%s ERROR %s Later\n%s INFO %s Started\n%s ERROR %s-other Other service",
 		from, service, to, service, from, service, from, service,
 	)
-	handler := httpapi.New(store, store)
+	handler := chi.NewRouter()
+	httpapi.RegisterLogRoutes(handler, store, store)
 	posted := httptest.NewRecorder()
 	handler.ServeHTTP(posted, httptest.NewRequest(http.MethodPost, "/v1/logs", strings.NewReader(payload)))
 	if posted.Code != http.StatusAccepted {

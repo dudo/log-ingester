@@ -18,14 +18,12 @@ import (
 const maxBodyBytes = 256 << 10
 const maxLineBytes = 8 << 10
 
-func New(writer logs.Writer, reader logs.Reader) http.Handler {
+func RegisterLogRoutes(router chi.Router, writer logs.Writer, reader logs.Reader) {
 	const logsPath = "/v1/logs"
-	router := chi.NewRouter()
 	searchLogs := search(reader)
 	router.Post(logsPath, ingest(writer))
 	router.Get(logsPath, searchLogs)
 	router.Head(logsPath, searchLogs)
-	return router
 }
 
 func ingest(writer logs.Writer) http.HandlerFunc {

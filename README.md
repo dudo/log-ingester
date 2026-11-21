@@ -10,14 +10,13 @@ Each line contains an RFC 3339 timestamp, a level, a service name, and the remai
 
 ## Run locally
 
-Use Go 1.27 and Docker Compose. Start ClickHouse and the Go service.
+Docker Compose runs the Go service and ClickHouse.
 
 ```sh
-docker compose up -d --wait
-go run ./cmd/log-ingester
+docker compose up -d --build --wait
 ```
 
-In another terminal, ingest the synthetic fixture and query it.
+Ingest the synthetic fixture and query it.
 
 ```sh
 curl -si --data-binary @testdata/demo.log http://127.0.0.1:8080/v1/logs
@@ -41,4 +40,4 @@ go test -race -tags integration ./...  # uses the running ClickHouse service
 docker compose down --volumes        # removes the local database
 ```
 
-The app listens on loopback port 8080 by default. Set `LISTEN_ADDR`, `CLICKHOUSE_URL`, `CLICKHOUSE_DB`, `CLICKHOUSE_USER`, or `CLICKHOUSE_PASSWORD` for a different local setup.
+Run `docker compose up -d --build --wait app` after editing the app. To run it on the host with Go 1.27, start ClickHouse with `docker compose up -d --wait clickhouse` and run `go run ./cmd/log-ingester`. Set `LISTEN_ADDR`, `CLICKHOUSE_URL`, `CLICKHOUSE_DB`, `CLICKHOUSE_USER`, or `CLICKHOUSE_PASSWORD` to override the host defaults.

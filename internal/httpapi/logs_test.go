@@ -9,8 +9,16 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/go-chi/chi/v5"
+
 	"github.com/dudo/log-ingester/internal/logs"
 )
+
+func newLogHandler(writer logs.Writer, reader logs.Reader) http.Handler {
+	router := chi.NewRouter()
+	RegisterLogRoutes(router, writer, reader)
+	return router
+}
 
 type writerFunc func(context.Context, []logs.Entry) error
 
@@ -22,7 +30,7 @@ const validLine = "2026-03-04T09:13:01.245234Z **ERROR** dispatch Lease  expired
 
 func TestIngestPreservesTimestampAndMessage(t *testing.T) {
 	var got []logs.Entry
-	handler := New(writerFunc(func(_ context.Context, entries []logs.Entry) error {
+	handler := newLogHandler(writerFunc(func(_ context.Context, entries []logs.Entry) error {
 		got = entries
 		return nil
 	}), nil)
@@ -50,7 +58,7 @@ func TestIngestRejectsMalformedOrOversizedRequestsBeforeWriting(t *testing.T) {
 		{"oversized line", validLine + strings.Repeat("x", maxLineBytes), http.StatusBadRequest},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			handler := New(writerFunc(func(context.Context, []logs.Entry) error {
+			handler := newLogHandler(writerFunc(func(context.Context, []logs.Entry) error {
 				t.Fatal("invalid request reached the writer")
 				return nil
 			}), nil)
@@ -64,7 +72,7 @@ func TestIngestRejectsMalformedOrOversizedRequestsBeforeWriting(t *testing.T) {
 }
 
 func TestIngestReturns503WhenStoreFails(t *testing.T) {
-	handler := New(writerFunc(func(context.Context, []logs.Entry) error {
+	handler := newLogHandler(writerFunc(func(context.Context, []logs.Entry) error {
 		return errors.New("synthetic insert failure")
 	}), nil)
 	response := httptest.NewRecorder()
@@ -77,7 +85,7 @@ func TestIngestReturns503WhenStoreFails(t *testing.T) {
 func TestSearchRejectsInvalidFilters(t *testing.T) {
 	for _, query := range []string{"level=unknown", "from=yesterday", "limit=501", "from=2026-03-05T00:00:00Z&to=2026-03-04T00:00:00Z"} {
 		response := httptest.NewRecorder()
-		New(nil, nil).ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/v1/logs?"+query, nil))
+		newLogHandler(nil, nil).ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/v1/logs?"+query, nil))
 		if response.Code != http.StatusBadRequest {
 			t.Errorf("%s: status = %d, want 400", query, response.Code)
 		}
@@ -85,7 +93,7 @@ func TestSearchRejectsInvalidFilters(t *testing.T) {
 }
 
 func TestLogRouteMethods(t *testing.T) {
-	handler := New(nil, nil)
+	handler := newLogHandler(nil, nil)
 	head := httptest.NewRecorder()
 	handler.ServeHTTP(head, httptest.NewRequest(http.MethodHead, "/v1/logs?limit=0", nil))
 	if head.Code != http.StatusBadRequest {

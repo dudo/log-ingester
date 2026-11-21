@@ -11,6 +11,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/go-chi/chi/v5"
+
 	"github.com/dudo/log-ingester/internal/clickhouse"
 	"github.com/dudo/log-ingester/internal/httpapi"
 )
@@ -41,8 +43,10 @@ func run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	router := chi.NewRouter()
+	httpapi.RegisterLogRoutes(router, store, store)
 	server := &http.Server{
-		Handler:           httpapi.New(store, store),
+		Handler:           router,
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       10 * time.Second,
 		WriteTimeout:      10 * time.Second,

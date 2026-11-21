@@ -3,7 +3,7 @@ name: log-ingester
 services:
   app:
     build: .
-    environment:
+    environment: &app-env
       LISTEN_ADDR: 0.0.0.0:8080
       CLICKHOUSE_URL: http://clickhouse:8123/
       CLICKHOUSE_DB: logs
@@ -19,6 +19,18 @@ services:
       interval: 2s
       timeout: 3s
       retries: 20
+  go:
+    profiles: [tools]
+    build:
+      context: .
+      target: tools
+    entrypoint: ["go"]
+    command: ["help"]
+    environment: *app-env
+    volumes:
+      - .:/usr/src/app
+      - gomod:/go/pkg/mod
+      - gobuild:/root/.cache/go-build
   clickhouse:
     image: clickhouse/clickhouse-server:26.8.42.13
     environment:
@@ -32,3 +44,7 @@ services:
       interval: 2s
       timeout: 3s
       retries: 20
+
+volumes:
+  gomod:
+  gobuild:

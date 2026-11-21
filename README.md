@@ -34,10 +34,14 @@ curl -s 'http://127.0.0.1:8080/v1/logs?level=ERROR&service=dispatch&from=2026-03
 - `internal/clickhouse` owns the table, SQL parameters, and ClickHouse HTTP client.
 - `cmd/log-ingester` starts the service and handles shutdown.
 
+The `go` service runs commands against your checkout and caches modules and build artifacts.
+
 ```sh
-go test -race ./...
-go test -race -tags integration ./...  # uses the running ClickHouse service
-docker compose down --volumes        # removes the local database
+docker compose run --rm go test -race ./...
+docker compose up -d --wait clickhouse
+docker compose run --rm go test -race -tags integration ./...
 ```
+
+Run `docker compose down` when finished. Add `--volumes` to remove the local database and tool caches.
 
 Run `docker compose up -d --build --wait app` after editing the app. To run it on the host with Go 1.27, start ClickHouse with `docker compose up -d --wait clickhouse` and run `go run ./cmd/log-ingester`. Set `LISTEN_ADDR`, `CLICKHOUSE_URL`, `CLICKHOUSE_DB`, `CLICKHOUSE_USER`, or `CLICKHOUSE_PASSWORD` to override the host defaults.
